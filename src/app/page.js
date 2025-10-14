@@ -1,5 +1,6 @@
 "use client";
 
+import Layout from "@/components/Layout";
 import {
   GizmoHelper,
   GizmoViewport,
@@ -217,7 +218,7 @@ function BoxWith6Textures() {
 
 function App() {
   return (
-    <div className="canvas-container">
+    <Layout>
       <Canvas shadows>
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport />
@@ -240,7 +241,7 @@ function App() {
         <UpdateSceneBackground />
         {/* <SecondModel /> */}
       </Canvas>
-    </div>
+    </Layout>
   );
 }
 

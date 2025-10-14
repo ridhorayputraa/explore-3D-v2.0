@@ -1,5 +1,6 @@
 "use client";
 
+import Layout from "@/components/Layout";
 import { ModelMapBake } from "@/components/ModelMapBake";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, extend, useFrame } from "@react-three/fiber";
@@ -12,7 +13,7 @@ export default function MapBake() {
 
 
   return (
-    <>
+    <Layout>
       <Canvas>
         {/* <ambientLight />
         <directionalLight
@@ -25,6 +26,6 @@ export default function MapBake() {
         <OrbitControls />
         <ModelMapBake />
       </Canvas>
-    </>
+    </Layout>
   );
 }

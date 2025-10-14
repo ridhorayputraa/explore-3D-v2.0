@@ -23,3 +23,8 @@ button {
   margin: 4px;
   padding: 8px;
 }
+
+.nav-container {
+  position: relative;
+  z-index: 5;
+}

@@ -7,8 +7,8 @@ function Layout3d({ children }) {
     <div className="w-full h-screen">
       <GlobalCanvas camera={{ position: [0, 0, 10], fov: 20 }}>
         <Perf position="top-right" />
-        {children}
       </GlobalCanvas>
+      {children}
     </div>
   );
 }

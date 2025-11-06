@@ -1,7 +1,6 @@
 "use client";
 
 import Layout from "@/components/Layout";
-import { ModelMapNotBake } from "@/components/ModelMapNotBake";
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, extend } from "@react-three/fiber";
 import { PlaneGeometry } from "three";
@@ -19,7 +18,7 @@ export default function MapNotBake() {
         <axesHelper args={[10]} />
 
         <OrbitControls />
-        <ModelMapNotBake />
+        {/* <ModelMapNotBake /> */}
       </Canvas>
     </Layout>
   );

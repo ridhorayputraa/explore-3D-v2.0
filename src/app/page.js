@@ -1,248 +1,63 @@
 "use client";
 
-import Layout from "@/components/Layout";
-import {
-  GizmoHelper,
-  GizmoViewport,
-  OrbitControls,
-  useGLTF,
-  useHelper,
-  useTexture,
-} from "@react-three/drei";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { useControls } from "leva";
-import { useRef, useState } from "react";
-import {
-  CameraHelper,
-  DirectionalLightHelper,
-  SpotLightHelper,
-  SRGBColorSpace,
-  TextureLoader,
-} from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { ModeHiluRill } from "@/components/ModeHiluRill";
+import { Environment } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-// To apply textures to an object, we need to make a customm component and import the TextureLoader from three.
 
-function SphereWithTexture() {
-  const texture = useLoader(TextureLoader, "/texture.jpg");
-  return (
-    <mesh position={[-2, 3, 2]}>
-      <sphereGeometry />
-      <meshStandardMaterial map={texture} />
-    </mesh>
-  );
-}
-
-// Another way to apply textures to an object is by using the useTexture hook from drei.
-function SphereWithTexture2() {
-  const texture = useTexture("/texture.jpg");
-
-  return (
-    <mesh position={[0, 1, -2]}>
-      <sphereGeometry />
-      <meshStandardMaterial map={texture} />
-    </mesh>
-  );
-}
-
-function LightWithHelper() {
-  const light = useRef();
-
-  const { angle, penumbra } = useControls({
-    angle: {
-      value: 0.5,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-
-    penumbra: {
-      value: 0.5,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-  });
-
-  useHelper(light, SpotLightHelper, "teal");
-
-  return (
-    <spotLight
-      ref={light}
-      angle={angle}
-      penumbra={penumbra}
-      intensity={80}
-      position={[2, 5, 1]}
-      castShadow
-    />
-  );
-}
-
-function DLightWithHelper() {
-  const light = useRef();
-  useHelper(light, DirectionalLightHelper, 2, "crimson");
-
-  const shadow = useRef();
-
-  useHelper(shadow, CameraHelper);
-
-  return (
-    <directionalLight ref={light} position={[-5, 8, 1]} castShadow>
-      <orthographicCamera
-        attach="shadow-camera"
-        ref={shadow}
-        top={8}
-        right={8}
-      />
-    </directionalLight>
-  );
-}
-
-function AnimatedBox() {
-  const boxRef = useRef();
-
-  const { color, speed } = useControls({
-    color: "#00bfff",
-    speed: {
-      value: 0.005,
-      min: 0,
-      max: 0.2,
-      step: 0.001,
-    },
-  });
-
-  const [wireframe, setWireframe] = useState(false);
-
-  const handleClick = () => {
-    setWireframe(!wireframe);
-    boxRef.current.material.wireframe = wireframe;
+export default function WelcomePage() {
+  const handleEnter = () => {
+    window.location.href = "/home";
   };
 
-  useFrame(() => {
-    boxRef.current.rotation.x += speed;
-    boxRef.current.rotation.y += speed;
-    boxRef.current.rotation.z += speed;
-  });
-
   return (
-    <mesh ref={boxRef} position={[5, 3, 0]} castShadow onClick={handleClick}>
-      <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color={color} wireframe={wireframe} />
-    </mesh>
+    <section className="h-screen flex flex-col justify-center items-center bg-white text-black overflow-hidden relative">
+      <div className="h-full w-full flex flex-col items-center text-center justify-center pt-20 px-4 z-10">
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">Welcome to</h2>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Mari Berkarya</h1>
+        <p className="text-gray-600 max-w-md mb-8">
+          Lorem ipsum dolor sit amet consectetur. Auctor id volutpat sed urna
+          elementum nulla ut vitae morbi. Leo et ultrices egestas convallis odio
+          justo.
+        </p>
+
+        <button
+          onClick={handleEnter}
+          className="bg-[#8AC7C1] text-white font-semibold px-10 py-3 rounded-full hover:opacity-80 transition-all"
+        >
+          Get Started
+        </button>
+      </div>
+
+      {/* Model 3D di bawah */}
+      <div className="relative w-full h-50 flex justify-center items-end overflow-hidden">
+        <div className="absolute bottom w-full h-full pointer-events-none">
+          <Suspense
+            fallback={<p className="text-center mt-10">Loading model...</p>}
+          >
+            <Canvas
+              camera={{
+                position: [1, 1, 100],
+                fov: 30,
+                near: 1,
+                far: 20000,
+              }}
+              style={{ background: "transparent" }}
+            >
+              <ambientLight intensity={1} />
+              <directionalLight position={[2, 5, 2]} intensity={2} />
+              <Suspense fallback={null}>
+                <group position={[0, -1.5, 0]}>
+                  <ModeHiluRill />
+                </group>
+                <Environment preset="sunset" />
+              </Suspense>
+            </Canvas>
+          </Suspense>
+        </div>
+      </div>
+    </section>
   );
 }
-
-// First method
-
-function Model() {
-  const result = useLoader(GLTFLoader, "/space-ship-scaled.glb");
-
-  return <primitive object={result.scene} position={[0, -1.5, 0]} />;
-}
-
-// Second method
-
-function SecondModel() {
-  const result = useGLTF("/space-ship-scaled.glb");
-
-  return <primitive object={result.scene} position={[0, 0, 0]} />;
-}
-
-// Aplying texture to a scene
-function UpdateSceneBackground() {
-  const { scene } = useThree();
-
-  const texture = useTexture("/stars.jpg");
-  texture.colorSpace = SRGBColorSpace;
-
-  // const [texture] = useLoader(CubeTextureLoader, [[
-  //   '/texture.jpg',
-  //   '/texture2.jpg',
-  //   '/texture3.jpg',
-  //   '/texture4.jpg',
-  //   '/texture5.jpg',
-  //   '/texture6.jpg'
-  // ]]);
-
-  // const texture = useCubeTexture(
-  //   [
-  //     "texture.jpg",
-  //     "texture2.jpg",
-  //     "texture3.jpg",
-  //     "texture4.jpg",
-  //     "texture5.jpg",
-  //     "texture6.jpg"
-  //   ],
-  //   {path:'/'}
-  // )
-
-  scene.background = texture;
-
-  return null;
-}
-
-//Aplying texture to a box
-function BoxWithTexture() {
-  const texture = useTexture("/texture.jpg");
-
-  return (
-    <mesh position={[0, 2, -4]}>
-      <boxGeometry />
-      <meshBasicMaterial map={texture} />
-    </mesh>
-  );
-}
-
-//Aplying 6 different textures to a box.
-
-function BoxWith6Textures() {
-  const texture1 = useTexture("/texture.jpg");
-  const texture2 = useTexture("/texture2.jpg");
-  const texture3 = useTexture("/texture3.jpg");
-  const texture4 = useTexture("/texture4.jpg");
-  const texture5 = useTexture("/texture5.jpg");
-  const texture6 = useTexture("/texture6.jpg");
-
-  return (
-    <mesh position={[0, 2, -4]}>
-      <boxGeometry />
-      <meshBasicMaterial attach="material-0" map={texture1} />
-      <meshBasicMaterial attach="material-1" map={texture2} />
-      <meshBasicMaterial attach="material-2" map={texture3} />
-      <meshBasicMaterial attach="material-3" map={texture4} />
-      <meshBasicMaterial attach="material-4" map={texture5} />
-      <meshBasicMaterial attach="material-5" map={texture6} />
-    </mesh>
-  );
-}
-
-function App() {
-  return (
-    <Layout>
-      <Canvas shadows>
-        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-          <GizmoViewport />
-        </GizmoHelper>
-        <gridHelper args={[20, 20, 0xff22aa, 0x55ccff]} />
-        <axesHelper args={[10]} />
-        <OrbitControls />
-        <AnimatedBox />
-        {/* <LightWithHelper /> */}
-        <DLightWithHelper />
-        {/* <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={[20, 20]} />
-          <meshStandardMaterial color="#f3f3f3" />
-        </mesh> */}
-        {/* <Model /> */}
-        <SphereWithTexture />
-        <SphereWithTexture2 />
-        <BoxWithTexture />
-        <BoxWith6Textures />
-        <UpdateSceneBackground />
-        {/* <SecondModel /> */}
-      </Canvas>
-    </Layout>
-  );
-}
-
-export default App;

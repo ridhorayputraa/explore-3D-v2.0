@@ -2,9 +2,8 @@
 
 import FormFocusSection from "@/components/FormFocusSection";
 import { MapMaka } from "@/components/MapMaka";
-import { ModeHiluNBRill } from "@/components/ModeHiluNBRill";
-import { ModeHiluRill } from "@/components/ModeHiluRill";
 import { ModelHiluDraco } from "@/components/ModelHiluDraco";
+import { ModelRocket } from "@/components/ModelRocket";
 import { YamaGelud } from "@/components/YamaGelud";
 import { AssetCacheProvider } from "@/provider/AssetCacheProvider";
 import {
@@ -56,6 +55,7 @@ export default function ScrollRig() {
 
             <ModelMapSection />
             <ModelYamaGeludSection />
+            <ModelRocketSection />
             <ModelYamaHiluSection />
 
             {/* <YamaGelud /> */}
@@ -101,6 +101,25 @@ function ModelYamaGeludSection() {
 
       <UseCanvas>
         <ModelYamaGeludScene el={el} />
+      </UseCanvas>
+    </section>
+  );
+}
+
+function ModelRocketSection() {
+  const el = useRef();
+
+  return (
+    <section className="relative h-[100vh]">
+      {/* elemen yang di-track untuk viewport scroll scene */}
+      <div
+        ref={el}
+        className="ViewportScrollScene h-screen flex justify-center items-center"
+        style={{ touchAction: "pan-x" }}
+      />
+
+      <UseCanvas>
+        <ModelRocketScene el={el} />
       </UseCanvas>
     </section>
   );
@@ -177,6 +196,49 @@ function ModelYamaGeludScene({ el }) {
           {/* Model kamu */}
           <group scale={1}>
             <YamaGelud />
+            {/* <ModeHiluRill /> */}
+          </group>
+
+          {/* Lingkungan & kamera */}
+          <Environment preset="sunset" />
+          <Grid args={[20, 20]} scale={0.5} fadeDistance={10} />
+          <OrbitControls
+            domElement={props.track.current}
+            makeDefault
+            enableZoom={false}
+          />
+
+          {/* <PerspectiveCamera
+            makeDefault
+            fov={25}
+            position={[5, 6, 10]}
+            onUpdate={(self) => self.lookAt(0, 0, 0)}
+          />
+
+          <CameraControls
+            makeDefault
+            minZoom={0.5}
+            maxZoom={2}
+            dollySpeed={0.5}
+            truckSpeed={1.2}
+          /> */}
+        </Suspense>
+      )}
+    </ViewportScrollScene>
+  );
+}
+
+function ModelRocketScene({ el }) {
+  const { camera } = useThree();
+
+  return (
+    <ViewportScrollScene track={el} hideOffscreen={false} camera={camera}>
+      {(props) => (
+        <Suspense fallback={null}>
+          {/* Model kamu */}
+          <group scale={1}>
+            <ModelRocket />
+            {/* <YamaGelud /> */}
             {/* <ModeHiluRill /> */}
           </group>
 

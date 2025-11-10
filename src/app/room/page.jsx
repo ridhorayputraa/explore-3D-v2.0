@@ -1,8 +1,8 @@
 "use client";
-
 import FormFocusSection from "@/components/FormFocusSection";
 import { MapMaka } from "@/components/MapMaka";
 import { ModelHiluDraco } from "@/components/ModelHiluDraco";
+import { ModelRocket } from "@/components/ModelRocket";
 import { ModelRoomHero } from "@/components/ModelRoomHero";
 import { AssetCacheProvider } from "@/provider/AssetCacheProvider";
 import {
@@ -14,6 +14,7 @@ import {
 import { Environment, Grid, OrbitControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
 export default function ScrollRig() {
   const [isTouch, setIsTouch] = useState(false);
@@ -55,7 +56,7 @@ export default function ScrollRig() {
             <ModelYamaGeludSection />
             <ModelYamaHiluSection />
 
-            <ModelYamaGeludSection />
+            <ModelRocketSection />
 
             <section className="h-screen flex justify-center items-center text-gray-500">
               <p>END OF PAGE</p>
@@ -96,6 +97,22 @@ function ModelYamaGeludSection() {
 
       <UseCanvas>
         <ModelYamaGeludScene el={el} />
+      </UseCanvas>
+    </section>
+  );
+}
+
+function ModelRocketSection() {
+  const el = useRef();
+
+  return (
+    <section className="relative h-[300vh]">
+      <div
+        ref={el}
+        className="ViewportScrollScene sticky top-0 h-screen flex justify-center items-center"
+      />
+      <UseCanvas>
+        <ModelRocketScene el={el} />
       </UseCanvas>
     </section>
   );
@@ -182,6 +199,53 @@ function ModelYamaGeludScene({ el }) {
   );
 }
 
+function ModelRocketScene({ el }) {
+  const { camera } = useThree();
+  const rocketRef = useRef();
+  const [avoidDirection, setAvoidDirection] = useState(1);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const contentLeft = document.querySelector(".content-left");
+      const rect = contentLeft?.getBoundingClientRect();
+      if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
+        setAvoidDirection(1);
+      } else {
+        setAvoidDirection(-1);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <ViewportScrollScene
+      frameloop="always"
+      track={el}
+      hideOffscreen={false}
+      camera={camera}
+    >
+      {(scrollState) => (
+        <Suspense fallback={null}>
+          <group ref={rocketRef} scale={1}>
+            <ModelRocket />
+          </group>
+
+          <RocketMotion
+            rocketRef={rocketRef}
+            scrollState={scrollState}
+            avoidDirection={avoidDirection}
+            el={el} // <--- tambahkan ini
+          />
+
+          <Environment preset="sunset" />
+          <Grid args={[20, 20]} scale={0.5} fadeDistance={10} />
+        </Suspense>
+      )}
+    </ViewportScrollScene>
+  );
+}
+
 function ModelYamaHiluScene({ el, formRef }) {
   const { camera } = useThree();
 
@@ -203,6 +267,55 @@ function ModelYamaHiluScene({ el, formRef }) {
       )}
     </ViewportScrollScene>
   );
+}
+
+function RocketMotion({ rocketRef, scrollState, avoidDirection, el }) {
+  const targetPos = useRef(new THREE.Vector3());
+  const targetRot = useRef(new THREE.Euler());
+
+  useFrame(() => {
+    if (!rocketRef.current || !el.current) return;
+
+    let progress = scrollState?.progress || 0;
+
+    const rect = el.current.getBoundingClientRect();
+    const viewportCenter = window.innerHeight / 2;
+    const elementCenter = rect.top + rect.height / 2;
+
+    const distanceFromCenter = viewportCenter - elementCenter;
+    const normalized = THREE.MathUtils.clamp(
+      0.5 + distanceFromCenter / viewportCenter / 2,
+      0,
+      1
+    );
+    progress = normalized;
+
+    const y = progress * 40 - 20;
+    const waveX = Math.sin(progress * Math.PI * 4) * 8 * avoidDirection;
+    const rotZ = Math.sin(progress * Math.PI * 2) * 0.3 * avoidDirection;
+
+    targetPos.current.set(waveX, y, 0);
+    targetRot.current.set(0, 0, rotZ);
+
+    rocketRef.current.position.lerp(targetPos.current, 0.1);
+    rocketRef.current.rotation.x = THREE.MathUtils.lerp(
+      rocketRef.current.rotation.x,
+      targetRot.current.x,
+      0.1
+    );
+    rocketRef.current.rotation.y = THREE.MathUtils.lerp(
+      rocketRef.current.rotation.y,
+      targetRot.current.y,
+      0.1
+    );
+    rocketRef.current.rotation.z = THREE.MathUtils.lerp(
+      rocketRef.current.rotation.z,
+      targetRot.current.z,
+      0.1
+    );
+  });
+
+  return null;
 }
 
 function CameraFollowCursor() {

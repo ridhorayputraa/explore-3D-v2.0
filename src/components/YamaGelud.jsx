@@ -34,7 +34,7 @@ export function YamaGelud(props) {
   }, [actions, names]);
 
   return (
-    <group ref={group} {...props} dispose={null}>
+    <group scale={0.5} ref={group} {...props} dispose={null}>
       <primitive object={clone} />
     </group>
   );

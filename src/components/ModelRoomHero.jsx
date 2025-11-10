@@ -1,6 +1,5 @@
 import { useAnimations, useGLTF } from "@react-three/drei";
-import { useGraph } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SkeletonUtils } from "three-stdlib";
 
@@ -8,54 +7,53 @@ export function ModelRoomHero(props) {
   const group = useRef();
   const { scene, animations } = useGLTF("/room-hero/model.glb");
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
-  const { nodes, materials } = useGraph(clone);
   const { actions } = useAnimations(animations, group);
-  const [playedOnce, setPlayedOnce] = useState(false);
+  const looped = useRef(false);
 
   useEffect(() => {
     if (!actions) return;
 
-    Object.values(actions).forEach((action, index) => {
+    const allActions = Object.values(actions);
+    if (!allActions.length) return;
+
+    const mixers = new Set();
+
+    allActions.forEach((action, index) => {
+      if (!action) return;
       const clip = action.getClip();
+      const mixer = action.getMixer();
+      mixers.add(mixer);
 
-      // Reset dan play semua
-      action.reset().fadeIn(0.5).play();
+      action.reset();
+      action.enabled = true;
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
 
-      if (index === 1) {
-        if (playedOnce) {
-          // 👉 Loop kedua dan seterusnya: cuma 0.5 → 1
-          const halfTime = clip.duration * 0.2;
-          action.time = halfTime;
-          action.setLoop(THREE.LoopPingPong, Infinity);
-          action.clampWhenFinished = false;
-        } else {
-          // 👉 Pertama kali: 0 → 1
-          action.setLoop(THREE.LoopOnce, 1);
-          action.clampWhenFinished = true;
+      if (index === 1 && !looped.current) {
+        const durationMs = clip.duration * 1000;
 
-          // Setelah selesai pertama kali, ubah jadi loop 0.5 → 1
-          action.getMixer().addEventListener("finished", (e) => {
-            if (e.action === action) {
-              const halfTime = clip.duration * 1;
-              action.reset();
-              action.time = halfTime;
-              action.setLoop(THREE.LoopPingPong, Infinity);
-              action.play();
-              setPlayedOnce(true);
-            }
-          });
-        }
-      } else {
-        // 👉 Animasi lain: jalan sekali aja
-        action.setLoop(THREE.LoopOnce, 1);
-        action.clampWhenFinished = true;
+        const timer = setTimeout(() => {
+          const loopAction = mixer.clipAction(clip, group.current);
+          loopAction.reset();
+          loopAction.enabled = true;
+          loopAction.setLoop(THREE.LoopPingPong, Infinity);
+          loopAction.clampWhenFinished = false;
+
+          looped.current = true;
+        }, Math.max(0, durationMs - 100));
+
+        return () => clearTimeout(timer);
       }
     });
 
     return () => {
-      Object.values(actions || {}).forEach((action) => action?.stop?.());
+      allActions.forEach((action) => {
+        if (action) action.stop();
+      });
+      mixers.forEach((mixer) => mixer.stopAllAction());
     };
-  }, [actions, playedOnce]);
+  }, [actions]);
 
   return (
     <group ref={group} {...props} dispose={null}>

@@ -29,7 +29,11 @@ export default function About() {
 
   return (
     <>
-      <Canvas shadows camera={{ position: [1, 1.5, 2.5], fov: 50 }}>
+      <Canvas
+        className="w-full h-full"
+        shadows
+        camera={{ position: [1, 1.5, 2.5], fov: 50 }}
+      >
         <ambientLight />
         <directionalLight
           position={[-5, 5, 5]}
